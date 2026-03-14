@@ -1,0 +1,9 @@
+import { inject, Injectable } from '@angular/core';
+import { SEA_SHIPMENT_REPOSITORY } from '../../../infrastructure/di/tokens';
+import { SeaShipmentRepository } from '../../../core/domain/ports/sea-shipment.repository';
+
+@Injectable({ providedIn: 'root' })
+export class GetAllSeaShipmentsUseCase {
+  private readonly repo = inject<SeaShipmentRepository>(SEA_SHIPMENT_REPOSITORY);
+  execute() { return this.repo.getAll(); }
+}
