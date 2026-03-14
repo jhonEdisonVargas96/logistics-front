@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { WarehouseRepository } from '../../../core/domain/ports/warehouse.repository';
 import { Warehouse, WarehouseRequest } from '../../../core/domain/models/warehouse.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable()
 export class WarehouseHttpRepository implements WarehouseRepository {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8085/api/v1/warehouses';
+  private readonly base = `${environment.apiUrl}/warehouses`;
 
   getAll(): Observable<Warehouse[]>                           { return this.http.get<Warehouse[]>(this.base); }
   getById(id: number): Observable<Warehouse>                  { return this.http.get<Warehouse>(`${this.base}/${id}`); }

@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PortRepository } from '../../../core/domain/ports/port.repository';
 import { Port, PortRequest } from '../../../core/domain/models/port.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable()
 export class PortHttpRepository implements PortRepository {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8085/api/v1/ports';
+  private readonly base = `${environment.apiUrl}/ports`;
 
   getAll(): Observable<Port[]>                       { return this.http.get<Port[]>(this.base); }
   getById(id: number): Observable<Port>              { return this.http.get<Port>(`${this.base}/${id}`); }

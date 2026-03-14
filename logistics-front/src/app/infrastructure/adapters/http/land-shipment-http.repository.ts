@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LandShipmentRepository } from '../../../core/domain/ports/land-shipment.repository';
 import { LandShipment, LandShipmentRequest } from '../../../core/domain/models/land-shipment.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable()
 export class LandShipmentHttpRepository implements LandShipmentRepository {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8085/api/v1/land-shipments';
+  private readonly base = `${environment.apiUrl}/land-shipments`;
 
   getAll(): Observable<LandShipment[]>                              { return this.http.get<LandShipment[]>(this.base); }
   getById(id: number): Observable<LandShipment>                     { return this.http.get<LandShipment>(`${this.base}/${id}`); }
