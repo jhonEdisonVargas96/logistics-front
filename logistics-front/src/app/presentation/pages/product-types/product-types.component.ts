@@ -2,12 +2,10 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductType } from '../../../core/domain/models/product-type.model';
-import { CreateProductTypeUseCase } from '../../../application/use-cases/product-types/create-product-type.use-case';
-import { DeleteProductTypeUseCase } from '../../../application/use-cases/product-types/delete-product-type.use-case';
+import { CreateProductTypeUseCase }  from '../../../application/use-cases/product-types/create-product-type.use-case';
+import { DeleteProductTypeUseCase }  from '../../../application/use-cases/product-types/delete-product-type.use-case';
 import { GetAllProductTypesUseCase } from '../../../application/use-cases/product-types/get-all-product-types.use-case';
-import { UpdateProductTypeUseCase } from '../../../application/use-cases/product-types/update-product-type.use-case';
-
-declare const bootstrap: any;
+import { UpdateProductTypeUseCase }  from '../../../application/use-cases/product-types/update-product-type.use-case';
 
 @Component({
   selector: 'app-product-types',
@@ -111,19 +109,19 @@ declare const bootstrap: any;
   `,
 })
 export class ProductTypesComponent implements OnInit {
-  private readonly fb        = inject(FormBuilder);
-  private readonly getAll    = inject(GetAllProductTypesUseCase);
-  private readonly create    = inject(CreateProductTypeUseCase);
-  private readonly update    = inject(UpdateProductTypeUseCase);
-  private readonly deleteUC  = inject(DeleteProductTypeUseCase);
+  private readonly fb       = inject(FormBuilder);
+  private readonly getAll   = inject(GetAllProductTypesUseCase);
+  private readonly create   = inject(CreateProductTypeUseCase);
+  private readonly update   = inject(UpdateProductTypeUseCase);
+  private readonly deleteUC = inject(DeleteProductTypeUseCase);
 
-  productTypes  = signal<ProductType[]>([]);
-  loading       = signal(false);
-  saving        = signal(false);
-  error         = signal<string | null>(null);
-  formError     = signal<string | null>(null);
-  editingId     = signal<number | null>(null);
-  deletingItem  = signal<ProductType | null>(null);
+  productTypes = signal<ProductType[]>([]);
+  loading      = signal(false);
+  saving       = signal(false);
+  error        = signal<string | null>(null);
+  formError    = signal<string | null>(null);
+  editingId    = signal<number | null>(null);
+  deletingItem = signal<ProductType | null>(null);
 
   form = this.fb.group({
     name:        ['', Validators.required],
@@ -144,14 +142,14 @@ export class ProductTypesComponent implements OnInit {
     this.editingId.set(null);
     this.form.reset();
     this.formError.set(null);
-    this.getModal('ptModal').show();
+    this.getModal('ptModal').then(m => m.show());
   }
 
   openEdit(pt: ProductType): void {
     this.editingId.set(pt.id);
     this.form.patchValue({ name: pt.name, description: pt.description });
     this.formError.set(null);
-    this.getModal('ptModal').show();
+    this.getModal('ptModal').then(m => m.show());
   }
 
   save(): void {
@@ -162,21 +160,28 @@ export class ProductTypesComponent implements OnInit {
     const id = this.editingId();
     const op$ = id ? this.update.execute(id, payload) : this.create.execute(payload);
     op$.subscribe({
-      next: () => { this.saving.set(false); this.getModal('ptModal').hide(); this.load(); },
+      next: () => {
+        this.saving.set(false);
+        this.getModal('ptModal').then(m => m.hide());
+        this.load();
+      },
       error: () => { this.formError.set('Error al guardar'); this.saving.set(false); },
     });
   }
 
   confirmDelete(pt: ProductType): void {
     this.deletingItem.set(pt);
-    this.getModal('ptDeleteModal').show();
+    this.getModal('ptDeleteModal').then(m => m.show());
   }
 
   deleteConfirmed(): void {
     const id = this.deletingItem()?.id;
     if (!id) return;
     this.deleteUC.execute(id).subscribe({
-      next: () => { this.getModal('ptDeleteModal').hide(); this.load(); },
+      next: () => {
+        this.getModal('ptDeleteModal').then(m => m.hide());
+        this.load();
+      },
       error: () => this.error.set('Error al eliminar'),
     });
   }
@@ -186,7 +191,8 @@ export class ProductTypesComponent implements OnInit {
     return !!(c?.invalid && c?.touched);
   }
 
-  private getModal(id: string): any {
-    return bootstrap.Modal.getOrCreateInstance(document.getElementById(id)!);
+  private async getModal(id: string): Promise<any> {
+    const { Modal } = await import('bootstrap');
+    return Modal.getOrCreateInstance(document.getElementById(id)!);
   }
 }

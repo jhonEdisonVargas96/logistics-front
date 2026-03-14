@@ -7,13 +7,11 @@ import { DeletePortUseCase } from '../../../application/use-cases/ports/delete-p
 import { GetAllPortsUseCase } from '../../../application/use-cases/ports/get-all-ports.use-case';
 import { UpdatePortUseCase } from '../../../application/use-cases/ports/update-port.use-case';
 
-declare const bootstrap: any;
-
 @Component({
-  selector: 'app-ports',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
+    selector: 'app-ports',
+    standalone: true,
+    imports: [CommonModule, ReactiveFormsModule],
+    template: `
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4 class="mb-0 fw-bold">Puertos</h4>
       <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Nuevo puerto</button>
@@ -135,84 +133,85 @@ declare const bootstrap: any;
   `,
 })
 export class PortsComponent implements OnInit {
-  private readonly fb       = inject(FormBuilder);
-  private readonly getAll   = inject(GetAllPortsUseCase);
-  private readonly create   = inject(CreatePortUseCase);
-  private readonly update   = inject(UpdatePortUseCase);
-  private readonly deleteUC = inject(DeletePortUseCase);
+    private readonly fb = inject(FormBuilder);
+    private readonly getAll = inject(GetAllPortsUseCase);
+    private readonly create = inject(CreatePortUseCase);
+    private readonly update = inject(UpdatePortUseCase);
+    private readonly deleteUC = inject(DeletePortUseCase);
 
-  ports        = signal<Port[]>([]);
-  loading      = signal(false);
-  saving       = signal(false);
-  error        = signal<string | null>(null);
-  formError    = signal<string | null>(null);
-  editingId    = signal<number | null>(null);
-  deletingItem = signal<Port | null>(null);
+    ports = signal<Port[]>([]);
+    loading = signal(false);
+    saving = signal(false);
+    error = signal<string | null>(null);
+    formError = signal<string | null>(null);
+    editingId = signal<number | null>(null);
+    deletingItem = signal<Port | null>(null);
 
-  form = this.fb.group({
-    name:     ['', Validators.required],
-    city:     ['', Validators.required],
-    country:  ['', Validators.required],
-    portType: ['', Validators.required],
-  });
-
-  ngOnInit(): void { this.load(); }
-
-  load(): void {
-    this.loading.set(true);
-    this.getAll.execute().subscribe({
-      next: (d) => { this.ports.set(d); this.loading.set(false); },
-      error: ()  => { this.error.set('Error al cargar'); this.loading.set(false); },
+    form = this.fb.group({
+        name: ['', Validators.required],
+        city: ['', Validators.required],
+        country: ['', Validators.required],
+        portType: ['', Validators.required],
     });
-  }
 
-  openCreate(): void {
-    this.editingId.set(null);
-    this.form.reset();
-    this.formError.set(null);
-    this.getModal('portModal').show();
-  }
+    ngOnInit(): void { this.load(); }
 
-  openEdit(p: Port): void {
-    this.editingId.set(p.id);
-    this.form.patchValue({ name: p.name, city: p.city, country: p.country, portType: p.portType });
-    this.formError.set(null);
-    this.getModal('portModal').show();
-  }
+    load(): void {
+        this.loading.set(true);
+        this.getAll.execute().subscribe({
+            next: (d) => { this.ports.set(d); this.loading.set(false); },
+            error: () => { this.error.set('Error al cargar'); this.loading.set(false); },
+        });
+    }
 
-  save(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.saving.set(true);
-    this.formError.set(null);
-    const payload = this.form.getRawValue() as any;
-    const id = this.editingId();
-    const op$ = id ? this.update.execute(id, payload) : this.create.execute(payload);
-    op$.subscribe({
-      next: () => { this.saving.set(false); this.getModal('portModal').hide(); this.load(); },
-      error: () => { this.formError.set('Error al guardar'); this.saving.set(false); },
-    });
-  }
+    openCreate(): void {
+        this.editingId.set(null);
+        this.form.reset();
+        this.formError.set(null);
+        this.getModal('portModal').then(m => m.show());
+    }
 
-  confirmDelete(p: Port): void {
-    this.deletingItem.set(p);
-    this.getModal('portDeleteModal').show();
-  }
+    openEdit(p: Port): void {
+        this.editingId.set(p.id);
+        this.form.patchValue({ name: p.name, city: p.city, country: p.country, portType: p.portType });
+        this.formError.set(null);
+        this.getModal('portModal').then(m => m.show());
+    }
 
-  deleteConfirmed(): void {
-    const id = this.deletingItem()?.id;
-    if (!id) return;
-    this.deleteUC.execute(id).subscribe({
-      next: () => { this.getModal('portDeleteModal').hide(); this.load(); },
-      error: () => this.error.set('Error al eliminar'),
-    });
-  }
+    save(): void {
+        if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+        this.saving.set(true);
+        this.formError.set(null);
+        const payload = this.form.getRawValue() as any;
+        const id = this.editingId();
+        const op$ = id ? this.update.execute(id, payload) : this.create.execute(payload);
+        op$.subscribe({
+            next: () => { this.saving.set(false); this.getModal('portModal').then(m => m.hide()); this.load(); },
+            error: () => { this.formError.set('Error al guardar'); this.saving.set(false); },
+        });
+    }
 
-  isInvalid(f: string): boolean {
-    const c = this.form.get(f);
-    return !!(c?.invalid && c?.touched);
-  }
+    confirmDelete(p: Port): void {
+        this.deletingItem.set(p);
+        this.getModal('portDeleteModal').then(m => m.show());
+    }
 
-  private getModal(id: string): any {
-    return bootstrap.Modal.getOrCreateInstance(document.getElementById(id)!);
-  }
+    deleteConfirmed(): void {
+        const id = this.deletingItem()?.id;
+        if (!id) return;
+        this.deleteUC.execute(id).subscribe({
+            next: () => { this.getModal('portDeleteModal').then(m => m.hide()); this.load(); },
+            error: () => this.error.set('Error al eliminar'),
+        });
+    }
+
+    isInvalid(f: string): boolean {
+        const c = this.form.get(f);
+        return !!(c?.invalid && c?.touched);
+    }
+
+    private async getModal(id: string): Promise<any> {
+        const { Modal } = await import('bootstrap');
+        return Modal.getOrCreateInstance(document.getElementById(id)!);
+    }
 }

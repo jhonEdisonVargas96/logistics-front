@@ -14,13 +14,11 @@ import { CreateSeaShipmentUseCase } from '../../../application/use-cases/sea-shi
 import { DeleteSeaShipmentUseCase } from '../../../application/use-cases/sea-shipments/delete-sea-shipment.use-case';
 import { UpdateSeaShipmentUseCase } from '../../../application/use-cases/sea-shipments/update-sea-shipment.use-case';
 
-declare const bootstrap: any;
-
 @Component({
-  selector: 'app-sea-shipments',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
+    selector: 'app-sea-shipments',
+    standalone: true,
+    imports: [CommonModule, ReactiveFormsModule],
+    template: `
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4 class="mb-0 fw-bold">Envíos marítimos</h4>
       <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Nuevo envío</button>
@@ -254,161 +252,162 @@ declare const bootstrap: any;
   `,
 })
 export class SeaShipmentsComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-  private readonly getAll = inject(GetAllSeaShipmentsUseCase);
-  private readonly create = inject(CreateSeaShipmentUseCase);
-  private readonly update = inject(UpdateSeaShipmentUseCase);
-  private readonly deleteUC = inject(DeleteSeaShipmentUseCase);
-  private readonly getAllClients = inject(GetAllClientsUseCase);
-  private readonly getAllPT = inject(GetAllProductTypesUseCase);
-  private readonly getAllPorts = inject(GetAllPortsUseCase);
+    private readonly fb = inject(FormBuilder);
+    private readonly getAll = inject(GetAllSeaShipmentsUseCase);
+    private readonly create = inject(CreateSeaShipmentUseCase);
+    private readonly update = inject(UpdateSeaShipmentUseCase);
+    private readonly deleteUC = inject(DeleteSeaShipmentUseCase);
+    private readonly getAllClients = inject(GetAllClientsUseCase);
+    private readonly getAllPT = inject(GetAllProductTypesUseCase);
+    private readonly getAllPorts = inject(GetAllPortsUseCase);
 
-  get previewQuantity(): number {
-    return this.form.get('quantity')?.value ?? 0;
-  }
-  get previewBasePrice(): number {
-    return this.form.get('basePrice')?.value ?? 0;
-  }
-
-  shipments = signal<SeaShipment[]>([]);
-  clients = signal<Client[]>([]);
-  productTypes = signal<ProductType[]>([]);
-  ports = signal<Port[]>([]);
-  loading = signal(false);
-  saving = signal(false);
-  error = signal<string | null>(null);
-  formError = signal<string | null>(null);
-  editingId = signal<number | null>(null);
-  deletingItem = signal<SeaShipment | null>(null);
-
-  form = this.fb.group({
-    clientId: ['', Validators.required],
-    productTypeId: ['', Validators.required],
-    portId: ['', Validators.required],
-    quantity: [null as number | null, [Validators.required, Validators.min(1)]],
-    deliveryDate: ['', Validators.required],
-    trackingNumber: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]{10}$/)]],
-    fleetNumber: [
-      '',
-      [Validators.required, Validators.pattern(/^[a-zA-Z]{3}[0-9]{4}[a-zA-Z]{1}$/)],
-    ],
-    basePrice: [null as number | null, [Validators.required, Validators.min(0)]],
-  });
-
-  ngOnInit(): void {
-    this.loading.set(true);
-    forkJoin({
-      shipments: this.getAll.execute(),
-      clients: this.getAllClients.execute(),
-      productTypes: this.getAllPT.execute(),
-      ports: this.getAllPorts.execute(),
-    }).subscribe({
-      next: ({ shipments, clients, productTypes, ports }) => {
-        this.shipments.set(shipments);
-        this.clients.set(clients);
-        this.productTypes.set(productTypes);
-        this.ports.set(ports);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Error al cargar datos');
-        this.loading.set(false);
-      },
-    });
-  }
-
-  load(): void {
-    this.getAll.execute().subscribe({
-      next: (d) => this.shipments.set(d),
-      error: () => this.error.set('Error al recargar'),
-    });
-  }
-
-  clientName(id: number): string {
-    return this.clients().find((c) => c.id === id)?.name ?? String(id);
-  }
-  productTypeName(id: number): string {
-    return this.productTypes().find((p) => p.id === id)?.name ?? String(id);
-  }
-  portName(id: number): string {
-    return this.ports().find((p) => p.id === id)?.name ?? String(id);
-  }
-
-  openCreate(): void {
-    this.editingId.set(null);
-    this.form.reset();
-    this.formError.set(null);
-    this.getModal('seaModal').show();
-  }
-
-  openEdit(s: SeaShipment): void {
-    this.editingId.set(s.id);
-    this.form.patchValue({
-      clientId: String(s.clientId),
-      productTypeId: String(s.productTypeId),
-      portId: String(s.portId),
-      quantity: s.quantity,
-      deliveryDate: s.deliveryDate,
-      trackingNumber: s.trackingNumber,
-      fleetNumber: s.fleetNumber,
-      basePrice: s.basePrice,
-    });
-    this.formError.set(null);
-    this.getModal('seaModal').show();
-  }
-
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+    get previewQuantity(): number {
+        return this.form.get('quantity')?.value ?? 0;
     }
-    this.saving.set(true);
-    this.formError.set(null);
-    const raw = this.form.getRawValue();
-    const payload = {
-      ...raw,
-      clientId: Number(raw.clientId),
-      productTypeId: Number(raw.productTypeId),
-      portId: Number(raw.portId),
-    } as any;
-    const id = this.editingId();
-    const op$ = id ? this.update.execute(id, payload) : this.create.execute(payload);
-    op$.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.getModal('seaModal').hide();
-        this.load();
-      },
-      error: () => {
-        this.formError.set('Error al guardar. Verifica los datos.');
-        this.saving.set(false);
-      },
+    get previewBasePrice(): number {
+        return this.form.get('basePrice')?.value ?? 0;
+    }
+
+    shipments = signal<SeaShipment[]>([]);
+    clients = signal<Client[]>([]);
+    productTypes = signal<ProductType[]>([]);
+    ports = signal<Port[]>([]);
+    loading = signal(false);
+    saving = signal(false);
+    error = signal<string | null>(null);
+    formError = signal<string | null>(null);
+    editingId = signal<number | null>(null);
+    deletingItem = signal<SeaShipment | null>(null);
+
+    form = this.fb.group({
+        clientId: ['', Validators.required],
+        productTypeId: ['', Validators.required],
+        portId: ['', Validators.required],
+        quantity: [null as number | null, [Validators.required, Validators.min(1)]],
+        deliveryDate: ['', Validators.required],
+        trackingNumber: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]{10}$/)]],
+        fleetNumber: [
+            '',
+            [Validators.required, Validators.pattern(/^[a-zA-Z]{3}[0-9]{4}[a-zA-Z]{1}$/)],
+        ],
+        basePrice: [null as number | null, [Validators.required, Validators.min(0)]],
     });
-  }
 
-  confirmDelete(s: SeaShipment): void {
-    this.deletingItem.set(s);
-    this.getModal('seaDeleteModal').show();
-  }
+    ngOnInit(): void {
+        this.loading.set(true);
+        forkJoin({
+            shipments: this.getAll.execute(),
+            clients: this.getAllClients.execute(),
+            productTypes: this.getAllPT.execute(),
+            ports: this.getAllPorts.execute(),
+        }).subscribe({
+            next: ({ shipments, clients, productTypes, ports }) => {
+                this.shipments.set(shipments);
+                this.clients.set(clients);
+                this.productTypes.set(productTypes);
+                this.ports.set(ports);
+                this.loading.set(false);
+            },
+            error: () => {
+                this.error.set('Error al cargar datos');
+                this.loading.set(false);
+            },
+        });
+    }
 
-  deleteConfirmed(): void {
-    const id = this.deletingItem()?.id;
-    if (!id) return;
-    this.deleteUC.execute(id).subscribe({
-      next: () => {
-        this.getModal('seaDeleteModal').hide();
-        this.load();
-      },
-      error: () => this.error.set('Error al eliminar'),
-    });
-  }
+    load(): void {
+        this.getAll.execute().subscribe({
+            next: (d) => this.shipments.set(d),
+            error: () => this.error.set('Error al recargar'),
+        });
+    }
 
-  isInvalid(f: string): boolean {
-    const c = this.form.get(f);
-    return !!(c?.invalid && c?.touched);
-  }
+    clientName(id: number): string {
+        return this.clients().find((c) => c.id === id)?.name ?? String(id);
+    }
+    productTypeName(id: number): string {
+        return this.productTypes().find((p) => p.id === id)?.name ?? String(id);
+    }
+    portName(id: number): string {
+        return this.ports().find((p) => p.id === id)?.name ?? String(id);
+    }
 
-  private getModal(id: string): any {
-    return bootstrap.Modal.getOrCreateInstance(document.getElementById(id)!);
-  }
+    openCreate(): void {
+        this.editingId.set(null);
+        this.form.reset();
+        this.formError.set(null);
+        this.getModal('seaModal').then(m => m.show());
+    }
+
+    openEdit(s: SeaShipment): void {
+        this.editingId.set(s.id);
+        this.form.patchValue({
+            clientId: String(s.clientId),
+            productTypeId: String(s.productTypeId),
+            portId: String(s.portId),
+            quantity: s.quantity,
+            deliveryDate: s.deliveryDate,
+            trackingNumber: s.trackingNumber,
+            fleetNumber: s.fleetNumber,
+            basePrice: s.basePrice,
+        });
+        this.formError.set(null);
+        this.getModal('seaModal').then(m => m.show());
+    }
+
+    save(): void {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            return;
+        }
+        this.saving.set(true);
+        this.formError.set(null);
+        const raw = this.form.getRawValue();
+        const payload = {
+            ...raw,
+            clientId: Number(raw.clientId),
+            productTypeId: Number(raw.productTypeId),
+            portId: Number(raw.portId),
+        } as any;
+        const id = this.editingId();
+        const op$ = id ? this.update.execute(id, payload) : this.create.execute(payload);
+        op$.subscribe({
+            next: () => {
+                this.saving.set(false);
+                this.getModal('seaModal').then(m => m.hide());
+                this.load();
+            },
+            error: () => {
+                this.formError.set('Error al guardar. Verifica los datos.');
+                this.saving.set(false);
+            },
+        });
+    }
+
+    confirmDelete(s: SeaShipment): void {
+        this.deletingItem.set(s);
+        this.getModal('seaDeleteModal').then(m => m.show());
+    }
+
+    deleteConfirmed(): void {
+        const id = this.deletingItem()?.id;
+        if (!id) return;
+        this.deleteUC.execute(id).subscribe({
+            next: () => {
+                this.getModal('seaDeleteModal').then(m => m.hide());
+                this.load();
+            },
+            error: () => this.error.set('Error al eliminar'),
+        });
+    }
+
+    isInvalid(f: string): boolean {
+        const c = this.form.get(f);
+        return !!(c?.invalid && c?.touched);
+    }
+
+    private async getModal(id: string): Promise<any> {
+        const { Modal } = await import('bootstrap');
+        return Modal.getOrCreateInstance(document.getElementById(id)!);
+    }
 }
